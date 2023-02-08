@@ -1,7 +1,8 @@
-from flask import Flask, jsonify, request
+from flask import Flask, Blueprint, jsonify, request
 import sqlite3
 
 app = Flask(__name__)
+v1 = Blueprint('v1', __name__)
 
 
 def get_db():
@@ -19,7 +20,7 @@ def get_db():
     return conn
 
 
-@app.route('/tasks', methods=['GET'])
+@v1.route('/tasks', methods=['GET'])
 def get_tasks():
     conn = get_db()
     cursor = conn.cursor()
@@ -40,7 +41,7 @@ def get_tasks():
     return jsonify(tasks_list)
 
 
-@app.route('/tasks/<int:task_id>', methods=['GET'])
+@v1.route('/tasks/<int:task_id>', methods=['GET'])
 def get_task(task_id):
     conn = get_db()
     cursor = conn.cursor()
@@ -57,7 +58,7 @@ def get_task(task_id):
     return jsonify(task_dict)
 
 
-@app.route('/tasks', methods=['POST'])
+@v1.route('/tasks', methods=['POST'])
 def create_task():
     task = request.get_json()['task']
 
@@ -79,7 +80,7 @@ def create_task():
     return jsonify(task_dict), 201
 
 
-@app.route('/tasks/<int:task_id>', methods=['PUT'])
+@v1.route('/tasks/<int:task_id>', methods=['PUT'])
 def update_task(task_id):
     task = request.get_json()['task']
     done = request.get_json()['done']
@@ -94,7 +95,7 @@ def update_task(task_id):
     return get_task(task_id)
 
 
-@app.route('/tasks/<int:task_id>', methods=['DELETE'])
+@v1.route('/tasks/<int:task_id>', methods=['DELETE'])
 def delete_task(task_id):
     conn = get_db()
     cursor = conn.cursor()
@@ -103,6 +104,9 @@ def delete_task(task_id):
     conn.commit()
 
     return jsonify({'message': 'Task deleted'})
+
+
+app.register_blueprint(v1, url_prefix='/v1')
 
 
 if __name__ == '__main__':
