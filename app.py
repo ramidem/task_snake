@@ -1,4 +1,4 @@
-from flask import Flask, Blueprint, jsonify, request
+from flask import Flask, Blueprint, make_response, jsonify, request
 import sqlite3
 
 app = Flask(__name__)
@@ -18,6 +18,20 @@ def get_db():
     """)
 
     return conn
+
+
+@v1.errorhandler(Exception)
+def handle_error(error):
+    status_code = 404
+    if hasattr(error, 'code'):
+        status_code = error.code
+    return jsonify({"error": str(error)}), status_code
+
+
+def not_found_error():
+    error = Exception('Task not found')
+    error.code = 404
+    raise error
 
 
 @v1.route('/tasks', methods=['GET'])
@@ -49,13 +63,14 @@ def get_task(task_id):
     cursor.execute("SELECT * FROM tasks WHERE id=?", [task_id])
     task = cursor.fetchone()
 
-    task_dict = {
+    if task is None:
+        not_found_error()
+
+    return jsonify({
         "id": task[0],
         "task": task[1],
         "done": task[2],
-    }
-
-    return jsonify(task_dict)
+    }), 200
 
 
 @v1.route('/tasks', methods=['POST'])
@@ -82,14 +97,19 @@ def create_task():
 
 @v1.route('/tasks/<int:task_id>', methods=['PUT'])
 def update_task(task_id):
-    task = request.get_json()['task']
+    new_task = request.get_json()['task']
     done = request.get_json()['done']
 
     conn = get_db()
     cursor = conn.cursor()
 
+    existing_task = get_task(task_id)
+
+    if existing_task is None:
+        not_found_error()
+
     cursor.execute("UPDATE tasks SET task=?, done=? WHERE id=?",
-                   [task, done, task_id])
+                   [new_task, done, task_id])
     conn.commit()
 
     return get_task(task_id)
@@ -99,6 +119,11 @@ def update_task(task_id):
 def delete_task(task_id):
     conn = get_db()
     cursor = conn.cursor()
+
+    task = get_task(task_id)
+
+    if task is None:
+        not_found_error()
 
     cursor.execute("DELETE FROM tasks WHERE id=?", [task_id])
     conn.commit()
