@@ -4,6 +4,10 @@ This whole REST API was created using ChatGPT as my way of learning Python
 
 ---
 
+## API Docs with flasgger
+
+Run the app locally, and go to [http://127.0.0.1:5000/apidocs](http://127.0.0.1:5000/apidocs)
+
 ## TODOs
 
 These were provided by ChatGPT and I decided to turn them into a to do list to be implemented in this app.
@@ -19,5 +23,5 @@ These were provided by ChatGPT and I decided to turn them into a to do list to b
 - [x] **Integrate with a database**: Use a database to store the API data and integrate it using SQLAlchemy.
 - [ ] **Implement authentication and authorization**: Implement OAuth, JWT, or session-based authentication to secure the API.
 - [x] **Implement API versioning**: Implement API versioning to maintain backward compatibility when making changes to the API. The API version can be included in the endpoint URL, such as "/v1/tasks".
-- [ ] **Document the API**: Document the API using Swagger or OpenAPI to make it easy for clients to understand how to use the API.
+- [x] **Document the API**: Document the API using Swagger or OpenAPI to make it easy for clients to understand how to use the API.
 

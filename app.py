@@ -1,8 +1,11 @@
-from flask import Flask, Blueprint, make_response, jsonify, request
+from flask import Flask, Blueprint, jsonify, request, redirect
+from flasgger import Swagger
+
 import sqlite3
 
 app = Flask(__name__)
-v1 = Blueprint('v1', __name__)
+v1 = Blueprint('api/v1', __name__)
+swagger = Swagger(app)
 
 
 def get_db():
@@ -36,6 +39,27 @@ def not_found_error():
 
 @v1.route('/tasks', methods=['GET'])
 def get_tasks():
+    """
+    Get a list of all tasks
+    ---
+    responses:
+        200:
+            description: A list of tasks
+            schema:
+                type: array
+                items:
+                    type: object
+                    properties:
+                        id:
+                            type: integer
+                            description: The task ID
+                        task:
+                            type: string
+                            description: The task
+                        done:
+                            type: boolean
+                            description: The task status
+    """
     conn = get_db()
     cursor = conn.cursor()
 
@@ -57,6 +81,29 @@ def get_tasks():
 
 @v1.route('/tasks/<int:task_id>', methods=['GET'])
 def get_task(task_id):
+    """
+    Get a task
+    ---
+    parameters:
+      - in: path
+        name: task_id
+        type: number
+    responses:
+        200:
+            description: A task
+            schema:
+                type: object
+                properties:
+                    id:
+                        type: integer
+                        description: The task ID
+                    task:
+                        type: string
+                        description: The task
+                    done:
+                        type: boolean
+                        description: The task status
+    """
     conn = get_db()
     cursor = conn.cursor()
 
@@ -75,6 +122,36 @@ def get_task(task_id):
 
 @v1.route('/tasks', methods=['POST'])
 def create_task():
+    """
+    Create a task
+    ---
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          required:
+            - task
+          properties:
+            task:
+              type: string
+              description: Task string
+    responses:
+        200:
+            description: A task
+            schema:
+                type: object
+                properties:
+                    id:
+                        type: integer
+                        description: The task ID
+                    task:
+                        type: string
+                        description: The task
+                    done:
+                        type: boolean
+                        description: The task status
+    """
     task = request.get_json()['task']
 
     conn = get_db()
@@ -97,6 +174,43 @@ def create_task():
 
 @v1.route('/tasks/<int:task_id>', methods=['PUT'])
 def update_task(task_id):
+    """
+    Update a task
+    ---
+    parameters:
+      - name: task_id
+        in: path
+        type: number
+        required: true
+      - name: body
+        in: body
+        required: true
+        schema:
+          required:
+            - task
+          properties:
+            task:
+              type: string
+              description: Task string
+            done:
+              type: number
+              description: Status of the task
+    responses:
+        200:
+            description: A task
+            schema:
+                type: object
+                properties:
+                    id:
+                        type: integer
+                        description: The task ID
+                    task:
+                        type: string
+                        description: The task
+                    done:
+                        type: boolean
+                        description: The task status
+    """
     new_task = request.get_json()['task']
     done = request.get_json()['done']
 
@@ -117,6 +231,23 @@ def update_task(task_id):
 
 @v1.route('/tasks/<int:task_id>', methods=['DELETE'])
 def delete_task(task_id):
+    """
+    Delete a task
+    ---
+    parameters:
+      - in: path
+        name: task_id
+        type: number
+    responses:
+        200:
+            description: Confirmation message
+            schema:
+                type: object
+                properties:
+                    message:
+                        type: string
+                        description: Task deletion confirmation
+    """
     conn = get_db()
     cursor = conn.cursor()
 
@@ -131,7 +262,7 @@ def delete_task(task_id):
     return jsonify({'message': 'Task deleted'})
 
 
-app.register_blueprint(v1, url_prefix='/v1')
+app.register_blueprint(v1, url_prefix='/api/v1')
 
 
 if __name__ == '__main__':
